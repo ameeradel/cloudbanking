@@ -19,7 +19,6 @@ build/
 *.tfstate.*
 terraform.tfvars
 terraform.tfvars.json
-.terraform.lock.hcl
 
 # OS / Editor
 .DS_Store
