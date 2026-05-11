@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudbanking-backend-service
+  namespace: cloudbanking
+spec:
+  type: ClusterIP
+  selector:
+    app: cloudbanking-backend
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
