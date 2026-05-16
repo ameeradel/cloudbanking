@@ -1,0 +1,64 @@
+namespace: cloudbanking
+
+replicaCount: 2
+
+image:
+  repository: 777208093235.dkr.ecr.eu-central-1.amazonaws.com/cloudbanking-backend
+  tag: latest
+  pullPolicy: Always
+
+app:
+  name: cloudbanking-backend
+  port: 3000
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+
+probes:
+  liveness:
+    path: /health
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  readiness:
+    path: /ready
+    initialDelaySeconds: 10
+    periodSeconds: 10
+
+service:
+  name: cloudbanking-backend-service
+  type: ClusterIP
+  port: 3000
+
+env:
+  nodeEnv: production
+  port: "3000"
+
+externalSecret:
+  enabled: true
+  secretStoreName: aws-secretsmanager
+  externalSecretName: backend-db-external-secret
+  targetSecretName: backend-db-secret
+  refreshInterval: 1h
+  awsSecretName: cloudbanking-dev/backend/db
+  region: eu-central-1
+
+ingress:
+  enabled: true
+  name: cloudbanking-backend-ingress
+  className: alb
+  host: api.cloudbanking.ameeradel.dev
+  path: /
+  pathType: Prefix
+  alb:
+    scheme: internet-facing
+    targetType: ip
+    listenPorts:
+      - HTTP: 80
+      - HTTPS: 443
+    certificateArn: "arn:aws:acm:eu-central-1:777208093235:certificate/ba28e521-91ee-4537-b114-51db8eebab83"
+    sslRedirect: "443"
