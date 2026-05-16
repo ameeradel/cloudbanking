@@ -59,6 +59,12 @@ spec:
                   name: backend-db-secret
                   key: DB_PASSWORD
 
+            - name: DB_SSL
+              valueFrom:
+                secretKeyRef:
+                  name: backend-db-secret
+                  key: DB_SSL
+
           livenessProbe:
             httpGet:
               path: /health

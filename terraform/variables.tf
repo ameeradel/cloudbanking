@@ -76,3 +76,13 @@ variable "db_allocated_storage" {
   description = "Allocated storage for RDS in GB"
   type        = number
 }
+
+variable "frontend_domain_name" {
+  description = "Custom domain name for the frontend CloudFront distribution"
+  type        = string
+}
+
+variable "frontend_acm_certificate_arn" {
+  description = "ACM certificate ARN for CloudFront. Must be in us-east-1"
+  type        = string
+}

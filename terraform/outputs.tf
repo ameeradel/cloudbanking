@@ -71,3 +71,17 @@ output "backend_db_secret_arn" {
   description = "AWS Secrets Manager secret ARN for backend database credentials"
   value       = aws_secretsmanager_secret.backend_db.arn
 }
+output "frontend_bucket_name" {
+  description = "S3 bucket name for frontend static files"
+  value       = aws_s3_bucket.frontend.bucket
+}
+
+output "frontend_cloudfront_domain_name" {
+  description = "CloudFront distribution domain name for frontend"
+  value       = aws_cloudfront_distribution.frontend.domain_name
+}
+
+output "frontend_cloudfront_distribution_id" {
+  description = "CloudFront distribution ID for cache invalidations"
+  value       = aws_cloudfront_distribution.frontend.id
+}
