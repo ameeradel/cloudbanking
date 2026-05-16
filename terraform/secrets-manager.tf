@@ -16,5 +16,6 @@ resource "aws_secretsmanager_secret_version" "backend_db" {
     DB_NAME     = aws_db_instance.postgres.db_name
     DB_USER     = aws_db_instance.postgres.username
     DB_PASSWORD = random_password.db_password.result
+    DB_SSL      = "true"
   })
 }

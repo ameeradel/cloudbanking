@@ -8,6 +8,9 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+frontend/.env.production
+backend/.env
+backend/node_modules/
 
 # Build output
 dist/
@@ -28,3 +31,4 @@ terraform.tfvars.json
 # Logs
 logs/
 *.log
+
