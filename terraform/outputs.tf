@@ -85,3 +85,8 @@ output "frontend_cloudfront_distribution_id" {
   description = "CloudFront distribution ID for cache invalidations"
   value       = aws_cloudfront_distribution.frontend.id
 }
+
+output "github_actions_role_arn" {
+  description = "IAM Role ARN used by GitHub Actions OIDC"
+  value       = aws_iam_role.github_actions.arn
+}

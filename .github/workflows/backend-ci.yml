@@ -1,0 +1,73 @@
+name: Backend CI - Build and Push to ECR
+
+on:
+  push:
+    branches:
+      - main
+      - feature/**
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-central-1
+  ECR_REPOSITORY: cloudbanking-backend
+
+jobs:
+  build-and-push:
+    name: Build and Push Backend Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::777208093235:role/cloudbanking-dev-github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image tag
+        id: vars
+        run: |
+          IMAGE_TAG=${GITHUB_SHA::7}
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t $ECR_REPOSITORY:${{ steps.vars.outputs.image_tag }} \
+            -t $ECR_REPOSITORY:latest \
+            ./backend
+
+      - name: Tag Docker image for ECR
+        run: |
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          ECR_REGISTRY=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
+          docker tag $ECR_REPOSITORY:${{ steps.vars.outputs.image_tag }} $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.vars.outputs.image_tag }}
+          docker tag $ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: Push Docker image to ECR
+        run: |
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          ECR_REGISTRY=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.vars.outputs.image_tag }}
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: Print image URI
+        run: |
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          ECR_REGISTRY=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
+          echo "Image pushed:"
+          echo "$ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.vars.outputs.image_tag }}"
