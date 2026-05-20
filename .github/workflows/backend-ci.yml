@@ -1,4 +1,4 @@
-name: Backend CI - Build and Push to ECR
+name: Backend CI - Build, Push, and Update Helm
 
 on:
   push:
@@ -11,20 +11,23 @@ on:
 
 permissions:
   id-token: write
-  contents: read
+  contents: write
 
 env:
   AWS_REGION: eu-central-1
   ECR_REPOSITORY: cloudbanking-backend
+  HELM_VALUES_FILE: helm/cloudbanking-backend/values.yaml
 
 jobs:
-  build-and-push:
-    name: Build and Push Backend Image
+  build-push-update-helm:
+    name: Build, Push Image, and Update Helm Tag
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4
@@ -63,6 +66,54 @@ jobs:
 
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.vars.outputs.image_tag }}
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: Update Helm image tag
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          values_file = Path("${{ env.HELM_VALUES_FILE }}")
+          image_tag = "${{ steps.vars.outputs.image_tag }}"
+
+          content = values_file.read_text()
+          lines = content.splitlines()
+
+          output = []
+          in_image_block = False
+
+          for line in lines:
+              stripped = line.strip()
+
+              if stripped == "image:":
+                  in_image_block = True
+                  output.append(line)
+                  continue
+
+              if in_image_block and line.startswith(("app:", "resources:", "probes:", "service:", "env:", "externalSecret:", "ingress:", "namespace:", "replicaCount:")):
+                  in_image_block = False
+
+              if in_image_block and stripped.startswith("tag:"):
+                  indent = line[: len(line) - len(line.lstrip())]
+                  output.append(f'{indent}tag: {image_tag}')
+              else:
+                  output.append(line)
+
+          values_file.write_text("\n".join(output) + "\n")
+          PY
+
+      - name: Commit Helm values update
+        run: |
+          if git diff --quiet; then
+            echo "No Helm values changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add $HELM_VALUES_FILE
+          git commit -m "Update backend image tag to ${{ steps.vars.outputs.image_tag }} [skip ci]"
+          git push
 
       - name: Print image URI
         run: |
