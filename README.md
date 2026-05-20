@@ -33,29 +33,7 @@ CloudBanking is a digital banking demo platform with:
 
 ## Architecture
 
-```text
-User
-↓
-cloudbanking.ameeradel.dev
-↓
-CloudFront
-↓
-Private S3 Bucket
-↓
-React Frontend
-↓ API Calls
-api.cloudbanking.ameeradel.dev
-↓
-AWS ALB HTTPS
-↓
-Kubernetes Ingress
-↓
-Backend Service
-↓
-Backend Pods on EKS
-↓
-RDS PostgreSQL
-```
+![CloudBanking Architecture](docs/images/cloudbanking-architecture.png)
 
 ---
 
