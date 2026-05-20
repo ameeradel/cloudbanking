@@ -4,7 +4,7 @@ replicaCount: 2
 
 image:
   repository: 777208093235.dkr.ecr.eu-central-1.amazonaws.com/cloudbanking-backend
-  tag: latest
+  tag: 4ec6555
   pullPolicy: Always
 
 app:
